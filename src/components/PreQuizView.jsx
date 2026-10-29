@@ -29,7 +29,7 @@ export function PreQuizView() {
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
-          {settings.quizTitle || 'Google Anti-Gravity Challenge'}
+          {settings.quizTitle || 'RLC JE 2026'}
         </h1>
         <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto mb-8">
           The quiz will automatically unlock at start time. Keep this page open. Your draft answers will be protected against disconnects.

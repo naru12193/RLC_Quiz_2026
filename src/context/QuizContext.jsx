@@ -29,7 +29,7 @@ export function QuizProvider({ children }) {
 
   // Settings & Status
   const [settings, setSettings] = useState({
-    quizTitle: 'Google Anti-Gravity Challenge',
+    quizTitle: 'RLC JE 2026',
     startTime: null,
     endTime: null,
     lastSyncedAt: null,
@@ -98,7 +98,7 @@ export function QuizProvider({ children }) {
         const start = new Date(now.getTime() + 5 * 60 * 1000); // starts in 5 minutes
         const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour duration
         const defaultSettings = {
-          quizTitle: 'Google Anti-Gravity Challenge',
+          quizTitle: 'RLC JE 2026',
           startTime: start.toISOString(),
           endTime: end.toISOString(),
           lastSyncedAt: null,

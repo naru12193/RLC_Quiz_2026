@@ -37,7 +37,7 @@ export default function App() {
         <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center animate-bounce">
           <Sparkles className="w-6 h-6 text-blue-400" />
         </div>
-        <p className="text-sm font-medium tracking-wide">Initializing Anti-Gravity Quiz Environment...</p>
+        <p className="text-sm font-medium tracking-wide">Initializing RLC JE 2026 Environment...</p>
       </div>
     );
   }
@@ -57,7 +57,7 @@ export default function App() {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-base tracking-tight text-white">
-              <span className="text-blue-400">Google</span> Anti-Gravity
+              <span className="text-blue-400">RLC</span> JE 2026
             </span>
           </div>
 
@@ -76,7 +76,7 @@ export default function App() {
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
-              {settings.quizTitle || 'Google Anti-Gravity Challenge'}
+              {settings.quizTitle || 'RLC JE 2026'}
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mb-8 leading-relaxed">
               Live timed quiz platform with instant local preservation and tamper-resistant Indian Standard Time synchronization.
@@ -131,7 +131,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="py-6 text-center text-xs text-slate-500 z-10">
-          Google Anti-Gravity Quiz Platform • Asia/Kolkata (IST) Standard
+          RLC JE 2026 Platform • Asia/Kolkata (IST) Standard
         </footer>
 
         {/* Unauthorized Domain Modal */}

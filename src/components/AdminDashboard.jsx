@@ -56,7 +56,7 @@ export function AdminDashboard() {
     if (settings) {
       if (settings.startTime) setStartTimeLocal(toDatetimeLocalIST(settings.startTime));
       if (settings.endTime) setEndTimeLocal(toDatetimeLocalIST(settings.endTime));
-      setQuizTitle(settings.quizTitle || 'Google Anti-Gravity Challenge');
+      setQuizTitle(settings.quizTitle || 'RLC JE 2026');
       setAllowAnyEmail(Boolean(settings.allowAnyEmailForTesting));
     }
   }, [settings]);
@@ -94,7 +94,7 @@ export function AdminDashboard() {
     }
 
     const res = await updateQuizSettings({
-      quizTitle: quizTitle.trim() || 'Google Anti-Gravity Challenge',
+      quizTitle: quizTitle.trim() || 'RLC JE 2026',
       startTime: startIso,
       endTime: endIso,
       allowAnyEmailForTesting: allowAnyEmail
@@ -227,7 +227,7 @@ export function AdminDashboard() {
                   type="text"
                   value={quizTitle}
                   onChange={(e) => setQuizTitle(e.target.value)}
-                  placeholder="e.g. Google Anti-Gravity Challenge"
+                  placeholder="e.g. RLC JE 2026"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                 />
               </div>

@@ -55,12 +55,12 @@ export function Navbar({ currentView, setCurrentView }) {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-bold text-lg text-white tracking-tight flex items-center gap-1.5">
-                <span className="text-blue-400">Google</span> Anti-Gravity
+                <span className="text-blue-400">RLC</span> JE 2026
               </h1>
               {getStatusBadge()}
             </div>
             <p className="text-xs text-slate-400 hidden sm:block">
-              {settings.quizTitle || 'RLC Live Quiz'}
+              {settings.quizTitle || 'RLC JE 2026'}
             </p>
           </div>
         </div>
