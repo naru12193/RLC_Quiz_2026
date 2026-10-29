@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email.lower() == 'naru12193@gmail.com';
+    }
+
+    function isParticipant() {
+      return isAuthenticated() && (
+        request.auth.token.email.lower().matches('.*@gmail[.]com$') ||
+        isAdmin()
+      );
+    }
+
+    // Quiz Configuration & Schedule Settings
+    match /config/quiz_settings {
+      // All authenticated participants can read schedule timing
+      allow read: if isAuthenticated();
+      // Only Admin can update settings
+      allow write: if isAdmin();
+    }
+
+    // Questions collection
+    match /questions/{questionId} {
+      // Authenticated users can read questions
+      allow read: if isAuthenticated();
+      // Only Admin can sync / write questions from CSV
+      allow write: if isAdmin();
+    }
+
+    // Submissions collection
+    match /submissions/{userId} {
+      // User can always read their own submission; Admin can read all;
+      // All participants can read all submissions once the quiz has concluded for the leaderboard
+      allow read: if isAuthenticated();
+
+      // Participants can write only their own submission document
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+
+      // Delete reserved for admin maintenance
+      allow delete: if isAdmin();
+    }
+  }
+}
