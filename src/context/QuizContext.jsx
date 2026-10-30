@@ -51,6 +51,7 @@ export function QuizProvider({ children }) {
   const [draftAnswers, setDraftAnswers] = useState({});
   const [flaggedQuestions, setFlaggedQuestions] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReattempting, setIsReattempting] = useState(false);
 
   // Ticker state (updates every second)
   const [quizStatus, setQuizStatus] = useState('pre-quiz'); // 'pre-quiz' | 'active' | 'post-quiz'
@@ -153,6 +154,9 @@ export function QuizProvider({ children }) {
         if (parsed.flagged) setFlaggedQuestions(parsed.flagged);
         if (typeof parsed.currentQuestionIndex === 'number') {
           setCurrentQuestionIndex(parsed.currentQuestionIndex);
+        }
+        if (parsed.inReattempt) {
+          setIsReattempting(true);
         }
       }
     } catch (e) {
@@ -269,9 +273,59 @@ export function QuizProvider({ children }) {
     });
   };
 
-  // 8. Submit Quiz Function
+  // 8. Re-attempt Handlers
+  const startReattempt = (mode = 'fresh') => {
+    let newAnswers = {};
+    let newFlags = [];
+    if (mode === 'revise') {
+      newAnswers = userSubmission?.answers ? { ...userSubmission.answers } : { ...draftAnswers };
+      newFlags = [...flaggedQuestions];
+    }
+    setDraftAnswers(newAnswers);
+    setFlaggedQuestions(newFlags);
+    setCurrentQuestionIndex(0);
+    setIsReattempting(true);
+
+    const key = getDraftKey();
+    if (key) {
+      try {
+        localStorage.setItem(key, JSON.stringify({
+          answers: newAnswers,
+          flagged: newFlags,
+          currentQuestionIndex: 0,
+          submitted: false,
+          inReattempt: true
+        }));
+      } catch (e) {
+        console.error('Error saving reattempt state to localStorage:', e);
+      }
+    }
+  };
+
+  const cancelReattempt = () => {
+    setIsReattempting(false);
+    const key = getDraftKey();
+    if (key) {
+      try {
+        const saved = localStorage.getItem(key);
+        const parsed = saved ? JSON.parse(saved) : {};
+        parsed.inReattempt = false;
+        localStorage.setItem(key, JSON.stringify(parsed));
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  // 9. Submit Quiz Function (Supports initial and re-attempts during active window)
   const submitQuiz = useCallback(async () => {
-    if (!user || userSubmission || isSubmitting) return;
+    if (!user || isSubmitting) return;
+
+    // Disallow submission if quiz is over, unless user had no submission or was in middle of re-attempt
+    const status = getQuizStatus(settings.startTime, settings.endTime);
+    if (status === 'post-quiz' && userSubmission && !isReattempting) {
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -291,6 +345,8 @@ export function QuizProvider({ children }) {
         }
       });
 
+      const nextAttemptNumber = (userSubmission?.attemptNumber || 0) + 1;
+
       const submissionData = {
         userId: user.uid,
         userEmail: user.email,
@@ -301,21 +357,27 @@ export function QuizProvider({ children }) {
         maxScore: maxScore,
         correctCount: correctCount,
         totalQuestions: questions.length,
+        attemptNumber: nextAttemptNumber,
         submittedAt: formatIST(getNowIST()),
         submittedAtTimestamp: serverTimestamp()
       };
 
       await setDoc(doc(db, SUBMISSIONS_COLLECTION, user.uid), submissionData);
       setUserSubmission(submissionData);
+      setIsReattempting(false);
 
       // Update draft in localStorage
       const key = getDraftKey();
       if (key) {
         try {
-          const saved = localStorage.getItem(key);
-          const parsed = saved ? JSON.parse(saved) : {};
-          parsed.submitted = true;
-          localStorage.setItem(key, JSON.stringify(parsed));
+          localStorage.setItem(key, JSON.stringify({
+            answers: draftAnswers,
+            flagged: flaggedQuestions,
+            currentQuestionIndex,
+            submitted: true,
+            inReattempt: false,
+            attemptNumber: nextAttemptNumber
+          }));
         } catch {
           // ignore
         }
@@ -328,9 +390,9 @@ export function QuizProvider({ children }) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [user, userSubmission, isSubmitting, questions, draftAnswers, getDraftKey]);
+  }, [user, userSubmission, isSubmitting, isReattempting, questions, draftAnswers, flaggedQuestions, currentQuestionIndex, settings.startTime, settings.endTime, getDraftKey]);
 
-  // 9. Timer & Status Clock Ticker
+  // 10. Timer & Status Clock Ticker
   useEffect(() => {
     const updateTicker = () => {
       const now = getNowIST();
@@ -346,15 +408,15 @@ export function QuizProvider({ children }) {
         setTimeRemaining(remaining);
 
         // Auto-submit if time runs out
-        if (remaining.isPast && !userSubmission && !autoSubmittedRef.current && user) {
+        if (remaining.isPast && (!userSubmission || isReattempting) && !autoSubmittedRef.current && user) {
           autoSubmittedRef.current = true;
           submitQuiz();
         }
       } else {
         // post-quiz
         setTimeRemaining({ totalMs: 0, hours: 0, minutes: 0, seconds: 0, isPast: true });
-        // Auto-submit if participant is still on screen without submission
-        if (!userSubmission && !autoSubmittedRef.current && user) {
+        // Auto-submit if participant is still on screen without submission or was in middle of re-attempt
+        if ((!userSubmission || isReattempting) && !autoSubmittedRef.current && user) {
           autoSubmittedRef.current = true;
           submitQuiz();
         }
@@ -364,7 +426,7 @@ export function QuizProvider({ children }) {
     updateTicker();
     const interval = setInterval(updateTicker, 1000);
     return () => clearInterval(interval);
-  }, [settings.startTime, settings.endTime, userSubmission, user, submitQuiz]);
+  }, [settings.startTime, settings.endTime, userSubmission, isReattempting, user, submitQuiz]);
 
   // 10. Admin: Update Quiz Settings
   const updateQuizSettings = async (newSettings) => {
@@ -446,6 +508,9 @@ export function QuizProvider({ children }) {
         syncQuestionsFromCsv,
         userSubmission,
         userSubmissionLoading,
+        isReattempting,
+        startReattempt,
+        cancelReattempt,
         allSubmissions,
         currentQuestionIndex,
         setCurrentQuestionIndex,

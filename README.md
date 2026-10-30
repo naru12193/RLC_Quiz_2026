@@ -16,8 +16,8 @@ A lightweight, high-reliability live quiz platform built strictly per the [Produ
    - Standardized strictly to `Asia/Kolkata` (UTC+05:30).
    - Clock skew correction with server/network time offset to prevent local client clock tampering.
    - **Pre-Quiz State (Current IST < Start IST):** Shows live countdown clock, rules, and waiting screen.
-   - **Active Quiz State (Start IST ≤ Current IST ≤ End IST):** Interactive question card, question navigator palette, auto-save status, remaining time clock, and submit button.
-   - **Post-Quiz State (Current IST > End IST):** Submissions locked; results, score breakdown, and global leaderboard unlocked.
+   - **Active Quiz State (Start IST ≤ Current IST ≤ End IST):** Interactive question card, question navigator palette, auto-save status, remaining time clock, and submit button. Participants can re-attempt the quiz (fresh attempt or revising answers) as many times as desired during this window.
+   - **Post-Quiz State (Current IST > End IST):** Submissions strictly locked; re-attempts disabled; results, score breakdown, and global leaderboard unlocked.
 
 3. **Resilience & `localStorage` Auto-Save:**
    - Every option selected is immediately saved to browser `localStorage` key `quiz_draft_state_<userId>`.

@@ -98,6 +98,7 @@ export function exportLeaderboardToCsv(submissions, filename = 'leaderboard.csv'
     'Display Name': sub.displayName || '',
     'Total Score': sub.totalScore ?? 0,
     'Max Score': sub.maxScore ?? 0,
+    'Attempt Number': sub.attemptNumber || 1,
     'Submitted At (IST)': sub.submittedAt || '',
     'User ID': sub.userId || ''
   }));

@@ -99,9 +99,9 @@ export function PreQuizView() {
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mb-3">
             <Award className="w-5 h-5" />
           </div>
-          <h3 className="font-semibold text-white text-sm mb-1">Tie-Breaker Rule</h3>
+          <h3 className="font-semibold text-white text-sm mb-1">Live Re-attempts Allowed</h3>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Rankings are computed by highest total score first. In case of ties, the earliest submission timestamp wins the higher rank.
+            You can re-attempt the quiz anytime within the start and end time window to improve your score. In case of tied scores, earliest submission wins.
           </p>
         </div>
 

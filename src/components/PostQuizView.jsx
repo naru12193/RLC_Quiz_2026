@@ -165,9 +165,15 @@ export function PostQuizView() {
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-400 bg-slate-950/60 rounded-xl p-3 border border-slate-800 flex items-center justify-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <span>Submitted At (IST): <strong>{userSubmission.submittedAt}</strong></span>
+                <div className="text-xs text-slate-400 bg-slate-950/60 rounded-xl p-3 border border-slate-800 flex items-center justify-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-slate-400" />
+                    <span>Submitted At (IST): <strong>{userSubmission.submittedAt}</strong></span>
+                  </div>
+                  <span className="text-slate-600">•</span>
+                  <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-mono text-[11px] border border-blue-500/20">
+                    Attempt #{userSubmission.attemptNumber || 1}
+                  </span>
                 </div>
               </div>
             </>
@@ -375,7 +381,14 @@ export function PostQuizView() {
                                   </span>
                                 )}
                               </div>
-                              <div className="text-slate-500 text-[11px]">{sub.userEmail}</div>
+                              <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                                <span>{sub.userEmail}</span>
+                                {sub.attemptNumber > 1 && (
+                                  <span className="text-[10px] px-1 rounded bg-amber-500/10 text-amber-300 font-mono border border-amber-500/20">
+                                    Att. #{sub.attemptNumber}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>

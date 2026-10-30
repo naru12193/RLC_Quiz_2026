@@ -13,7 +13,10 @@ import {
   HelpCircle,
   XCircle,
   FileCheck2,
-  Lock
+  Lock,
+  RotateCcw,
+  Edit3,
+  Undo2
 } from 'lucide-react';
 
 export function ActiveQuizView() {
@@ -28,6 +31,9 @@ export function ActiveQuizView() {
     submitQuiz,
     isSubmitting,
     userSubmission,
+    isReattempting,
+    startReattempt,
+    cancelReattempt,
     timeRemaining,
     settings
   } = useQuiz();
@@ -49,13 +55,20 @@ export function ActiveQuizView() {
     );
   }
 
-  // If user already submitted their quiz
-  if (userSubmission) {
+  // If user already submitted their quiz and NOT currently taking a re-attempt
+  if (userSubmission && !isReattempting) {
+    const attemptNumber = userSubmission.attemptNumber || 1;
+
     return (
-      <div className="max-w-2xl mx-auto py-12 px-4">
-        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-8 shadow-2xl text-center">
+      <div className="max-w-2xl mx-auto py-10 px-4">
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-8 shadow-2xl text-center">
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto mb-4">
             <FileCheck2 className="w-8 h-8" />
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold mb-3">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Attempt #{attemptNumber} Recorded
           </div>
 
           <h2 className="text-2xl font-bold text-white mb-2">Quiz Successfully Submitted!</h2>
@@ -65,14 +78,58 @@ export function ActiveQuizView() {
 
           <div className="bg-slate-950/80 rounded-2xl p-5 border border-slate-800 text-left mb-6 space-y-3">
             <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-400">Recorded Attempt:</span>
+              <span className="font-semibold text-white">Attempt #{attemptNumber}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400">Total Questions Attempted:</span>
               <span className="font-semibold text-white">
                 {Object.keys(userSubmission.answers || {}).length} / {questions.length}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-400">Submission Timestamp:</span>
+              <span className="text-slate-400">Submission Timestamp (IST):</span>
               <span className="font-semibold text-emerald-400">{userSubmission.submittedAt}</span>
+            </div>
+          </div>
+
+          {/* Re-attempt Option Card during Active Window */}
+          <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 text-left mb-6 relative overflow-hidden">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="w-4 h-4 text-blue-400" />
+                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  Re-attempt Quiz (Active Window)
+                </span>
+              </div>
+              <span className="text-[11px] text-emerald-400 font-mono font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Window Active
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+              The quiz window is currently active until <strong className="text-slate-200">{formatIST(settings.endTime)}</strong>. You are permitted to re-attempt the quiz to improve your answers. Your latest submission before the deadline will be recorded on the final leaderboard.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => startReattempt('fresh')}
+                className="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition-all"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Start Fresh Re-attempt</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => startReattempt('revise')}
+                className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 border border-slate-700 transition-colors"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-blue-400" />
+                <span>Revise Previous Answers</span>
+              </button>
             </div>
           </div>
 
@@ -111,9 +168,17 @@ export function ActiveQuizView() {
         {/* Progress & Saved badge */}
         <div className="flex items-center gap-4">
           <div>
-            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider block">
-              Question {currentQuestionIndex + 1} of {totalQuestions}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider block">
+                Question {currentQuestionIndex + 1} of {totalQuestions}
+              </span>
+              {userSubmission && isReattempting && (
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold flex items-center gap-1">
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  Attempt #{(userSubmission.attemptNumber || 1) + 1}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-sm font-semibold text-white">
                 {answeredCount} Answered
@@ -144,14 +209,29 @@ export function ActiveQuizView() {
           <span className="text-[11px] font-sans font-normal text-slate-400">remaining</span>
         </div>
 
-        {/* Submit Quiz Header Button */}
-        <button
-          onClick={() => setShowSubmitModal(true)}
-          className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-900/30 flex items-center gap-2 transition-all"
-        >
-          <Send className="w-3.5 h-3.5" />
-          <span>Submit Quiz</span>
-        </button>
+        {/* Right Top Actions */}
+        <div className="flex items-center gap-2">
+          {userSubmission && isReattempting && (
+            <button
+              type="button"
+              onClick={cancelReattempt}
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium border border-slate-700 flex items-center gap-1.5 transition-colors"
+              title="Return to your previous recorded submission summary"
+            >
+              <Undo2 className="w-3.5 h-3.5 text-slate-400" />
+              <span className="hidden sm:inline">Cancel Re-attempt</span>
+            </button>
+          )}
+
+          {/* Submit Quiz Header Button */}
+          <button
+            onClick={() => setShowSubmitModal(true)}
+            className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-900/30 flex items-center gap-2 transition-all"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>{userSubmission ? `Submit Attempt #${(userSubmission.attemptNumber || 1) + 1}` : 'Submit Quiz'}</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -324,7 +404,7 @@ export function ActiveQuizView() {
               className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 border border-slate-700 transition-colors"
             >
               <Send className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Submit Final Answers</span>
+              <span>{userSubmission ? `Submit Attempt #${(userSubmission.attemptNumber || 1) + 1}` : 'Submit Final Answers'}</span>
             </button>
           </div>
         </div>
@@ -335,9 +415,15 @@ export function ActiveQuizView() {
       {showSubmitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
           <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2">Ready to Submit Quiz?</h3>
+            <h3 className="text-lg font-bold text-white mb-2">
+              {userSubmission 
+                ? `Submit Attempt #${(userSubmission.attemptNumber || 1) + 1}?` 
+                : 'Ready to Submit Quiz?'}
+            </h3>
             <p className="text-xs text-slate-400 mb-5">
-              Please double-check your answers. Once submitted, answers cannot be edited.
+              {userSubmission 
+                ? `This will record Attempt #${(userSubmission.attemptNumber || 1) + 1} and update your score on the leaderboard. You can continue re-attempting as long as the quiz window is open.` 
+                : 'Please double-check your answers. You can also re-attempt the quiz anytime while the active window remains open.'}
             </p>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
@@ -363,7 +449,7 @@ export function ActiveQuizView() {
                 onClick={() => setShowSubmitModal(false)}
                 className="flex-1 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
               >
-                Back to Quiz
+                Back to Questions
               </button>
               <button
                 type="button"

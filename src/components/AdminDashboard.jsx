@@ -463,8 +463,13 @@ export function AdminDashboard() {
                           <div className="font-semibold text-slate-100 truncate max-w-[140px]">
                             {sub.displayName || sub.userEmail?.split('@')[0]}
                           </div>
-                          <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
-                            {sub.userEmail}
+                          <div className="text-[10px] text-slate-500 truncate max-w-[140px] flex items-center gap-1.5">
+                            <span>{sub.userEmail}</span>
+                            {sub.attemptNumber > 1 && (
+                              <span className="text-[9px] px-1 rounded bg-amber-500/15 text-amber-300 font-mono">
+                                #{sub.attemptNumber}
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="py-2 px-3 text-center">
