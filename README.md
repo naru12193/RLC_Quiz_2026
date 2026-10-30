@@ -1,4 +1,4 @@
-# Google Anti-Gravity Quiz App (RLC 2026)
+# RLC JE 2026
 
 A lightweight, high-reliability live quiz platform built strictly per the [Product Requirement Document](product_requirement_document_prd.md).
 
