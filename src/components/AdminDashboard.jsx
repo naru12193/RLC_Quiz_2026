@@ -69,7 +69,7 @@ export function AdminDashboard() {
         </div>
         <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
         <p className="text-sm text-slate-400">
-          This panel is restricted exclusively to the administrator account (<strong>naru12193@gmail.com</strong>).
+          This panel is restricted exclusively to the administrator account (<strong>K Narayana Rao, VM BA</strong>).
         </p>
       </div>
     );

@@ -1,11 +1,21 @@
 sno,question,Option-A,Option-B,Option-C,Option-D,Answer
-1,What is 2+2?,44,22,33,55,c
-2,What is the capital of France?,Berlin,Paris,Rome,Madrid,b
-3,HTML stands for?,HyperText Markup Language,High Transfer Mode Language,Home Tool Markup Language,None of the above,a
-4,Which planet is known as the Red Planet?,Venus,Mars,Jupiter,Saturn,b
-5,Who wrote 'Romeo and Juliet'?,Charles Dickens,William Shakespeare,Jane Austen,Mark Twain,b
-6,What is the largest ocean on Earth?,Atlantic Ocean,Indian Ocean,Arctic Ocean,Pacific Ocean,d
-7,In which year did World War II end?,1943,1944,1945,1946,c
-8,What is the square root of 144?,10,11,12,13,c
-9,Which programming language is known as the 'mother of all languages'?,Python,Java,C,Assembly,d
-10,Who painted the Mona Lisa?,Vincent van Gogh,Pablo Picasso,Leonardo da Vinci,Michelangelo,c
+1,BSNL was established on which date?,October 1 1999,October 1 2000,April 1 2000,January 1 2001,B
+2,BSNL initial vision emphasized?,Value added customer services,Becoming largest telecom company globally,Mobile data services only,Satellite communication only,B
+3,Current BSNL vision focuses on?,Low cost only,World class telecom services using state of art technology,Only rural services,Only mobile services,B
+4,Highest officer at BSNL circle level is?,GM,DGM,CGMT,AGM,C
+5,Highest financial officer in BSNL is?,GM Finance,DFA,CGMT,CVO,B
+6,Major enemy of electronic exchange equipment is?,Heat,Dust,Noise,Vibration,B
+7,High temperature affects electronic components by?,Reducing resistance,Increasing reverse bias current,Stopping current flow,Improving efficiency,B
+8,High humidity in exchanges causes?,Cooling effect,Corrosion and short circuits,Better performance,Lower leakage current,B
+9,Static electricity can be controlled by?,Painting equipment,Grounding and shielding,Increasing humidity,Using plastic covers,B
+10,DTMF full form is?,Dual Telephone Multi Frequency,Dual Tone Multi Frequency,Digital Tone Multi Frequency,Double Tone Multi Frequency,B
+11,DTMF dialing replaced which old system?,Pulse dialing,Rotary decadic dialing,PCM dialing,MF dialing,B
+12,Standard DTMF dialing uses how many frequencies?,4,6,7,16,C
+13,PCM full form is?,Pulse Code Modulation,Phase Code Modulation,Primary Code Modulation,Parallel Code Modulation,A
+14,Number of channels in PCM system is?,16,24,30,32,D
+15,Number of speech channels in PCM is?,28,30,31,32,B
+16,PCM signaling channels are?,2,4,6,8,A
+17,Time Division Multiplexing is used in?,Analog switching,Digital switching,Mechanical switching,Manual switching,B
+18,VRLA battery full form is?,Valve Rated Lead Acid,Valve Regulated Lead Acid,Voltage Regulated Lead Acid,Variable Rated Lead Acid,B
+19,VRLA battery is preferred because it is?,Low cost,Maintenance free,High voltage,Light weight,B
+20,Nominal voltage of VRLA cell is?,1.5 V,2.0 V,2.15 V,2.25 V,B

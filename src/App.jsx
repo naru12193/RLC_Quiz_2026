@@ -122,7 +122,7 @@ export default function App() {
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>Administrator access designated to <strong>naru12193@gmail.com</strong>.</span>
+                <span>Administrator access designated to <strong>K Narayana Rao, VM BA</strong>.</span>
               </div>
             </div>
 
