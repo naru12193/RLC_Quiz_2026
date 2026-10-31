@@ -118,6 +118,11 @@ export function PostQuizView() {
                   <Trophy className="w-10 h-10" />
                 </div>
 
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-3">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {userSubmission.quizTitle || 'RLC JE 2026'}
+                </div>
+
                 <h2 className="text-2xl font-bold text-white mb-1">
                   {userSubmission.displayName || user?.displayName || 'Participant'}
                 </h2>

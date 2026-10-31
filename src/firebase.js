@@ -47,6 +47,7 @@ export const db = getFirestore(app);
 export const CONFIG_DOC = 'quiz_settings';
 export const QUESTIONS_COLLECTION = 'questions';
 export const SUBMISSIONS_COLLECTION = 'submissions';
+export const RESULTS_COLLECTION = 'quiz_results';
 export const ADMIN_EMAIL = 'naru12193@gmail.com';
 
 export {

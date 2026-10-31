@@ -24,16 +24,21 @@ A lightweight, high-reliability live quiz platform built strictly per the [Produ
    - Survives accidental tab closures, page reloads, and temporary network dropouts.
    - Auto-submits answers if the participant is still taking the quiz when the IST End Time is reached.
 
-4. **CSV Question Ingestion Module:**
+4. **Dedicated Firebase Results Collection (`/quiz_results`):**
+   - Every user submission and re-attempt is permanently recorded in the `/quiz_results` collection.
+   - Stores the active **`quizTitle`**, `userId`, `userEmail`, `totalScore`, `maxScore`, `percentage`, `attemptNumber`, and IST timestamp.
+   - Admin console allows inspecting results across quiz titles and exporting all quiz results to CSV.
+
+5. **CSV Question Ingestion Module:**
    - **Default Server Fetch:** The app automatically fetches `/quizQuestion.csv` hosted in the `public/` directory when the Admin clicks **"Sync Questions from Server CSV"**.
    - **Schema Compatibility:** Seamlessly parses both the provided `quizQuestion.csv` schema (`sno,question,Option-A,Option-B,Option-C,Option-D,Answer`) and the PRD schema (`Question_ID,Question_Text,Option_A,Option_B,Option_C,Option_D,Correct_Option,Marks`).
    - Normalizes answers, sets marks, and publishes questions directly into Firestore collection `/questions`.
 
-5. **Leaderboard & Ranking Logic:**
+6. **Leaderboard & Ranking Logic:**
    - Locked until End Time IST (unless viewed by Admin).
    - **Primary Rank:** Highest Total Score.
    - **Tie-Breaker:** Earliest Submission Timestamp (IST).
-   - **Export:** Admin can export the full leaderboard table to CSV (`google_quiz_leaderboard.csv`) with a single click.
+   - **Export:** Admin can export the full leaderboard table or all quiz results collection to CSV with a single click.
 
 ---
 

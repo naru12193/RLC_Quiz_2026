@@ -94,6 +94,7 @@ export function downloadCsvFile(filename, csvContent) {
 export function exportLeaderboardToCsv(submissions, filename = 'leaderboard.csv') {
   const data = submissions.map((sub, idx) => ({
     Rank: idx + 1,
+    'Quiz Title': sub.quizTitle || 'RLC JE 2026',
     'User Email': sub.userEmail || '',
     'Display Name': sub.displayName || '',
     'Total Score': sub.totalScore ?? 0,
@@ -101,6 +102,30 @@ export function exportLeaderboardToCsv(submissions, filename = 'leaderboard.csv'
     'Attempt Number': sub.attemptNumber || 1,
     'Submitted At (IST)': sub.submittedAt || '',
     'User ID': sub.userId || ''
+  }));
+
+  const csv = Papa.unparse(data);
+  downloadCsvFile(filename, csv);
+}
+
+/**
+ * Generate CSV for All Quiz Results export from quiz_results collection
+ */
+export function exportQuizResultsToCsv(results, filename = 'all_quiz_results.csv') {
+  const data = results.map((res, idx) => ({
+    '#': idx + 1,
+    'Quiz Title': res.quizTitle || 'RLC JE 2026',
+    'User Email': res.userEmail || '',
+    'Display Name': res.displayName || '',
+    'Total Score': res.totalScore ?? 0,
+    'Max Score': res.maxScore ?? 0,
+    'Percentage': `${res.percentage ?? 0}%`,
+    'Correct Answers': res.correctCount ?? 0,
+    'Total Questions': res.totalQuestions ?? 0,
+    'Attempt Number': res.attemptNumber || 1,
+    'Submitted At (IST)': res.submittedAt || '',
+    'Result ID': res.resultId || res.id || '',
+    'User ID': res.userId || ''
   }));
 
   const csv = Papa.unparse(data);

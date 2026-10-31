@@ -7,14 +7,14 @@ import { ActiveQuizView } from './components/ActiveQuizView';
 import { PostQuizView } from './components/PostQuizView';
 import { AdminDashboard } from './components/AdminDashboard';
 import { UnauthorizedModal } from './components/UnauthorizedModal';
-import { 
-  Sparkles, 
-  Clock, 
-  ShieldCheck, 
-  ArrowRight, 
+import {
+  Sparkles,
+  Clock,
+  ShieldCheck,
+  ArrowRight,
   HelpCircle,
   AlertCircle,
-  FileCheck 
+  FileCheck
 } from 'lucide-react';
 
 export default function App() {
@@ -46,7 +46,7 @@ export default function App() {
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between relative overflow-hidden bg-radial-glow">
-        
+
         {/* Ambient Top Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -70,7 +70,7 @@ export default function App() {
         {/* Central Sign-In Card */}
         <main className="flex-1 flex items-center justify-center p-4 z-10">
           <div className="max-w-md w-full rounded-3xl bg-slate-900/90 border border-slate-800 p-8 sm:p-10 shadow-2xl backdrop-blur-xl text-center">
-            
+
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-600/25">
               <Sparkles className="w-8 h-8" />
             </div>
@@ -131,7 +131,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="py-6 text-center text-xs text-slate-500 z-10">
-          RLC JE 2026 Platform • Asia/Kolkata (IST) Standard
+          Developed by K. Narayana Rao, IT Section, VM BA
         </footer>
 
         {/* Unauthorized Domain Modal */}

@@ -7,7 +7,10 @@ import {
   formatIST, 
   getNowIST 
 } from '../utils/timeUtils';
-import { exportLeaderboardToCsv } from '../utils/csvParser';
+import { 
+  exportLeaderboardToCsv, 
+  exportQuizResultsToCsv 
+} from '../utils/csvParser';
 import { 
   Clock, 
   Calendar, 
@@ -36,8 +39,11 @@ export function AdminDashboard() {
     questions, 
     syncQuestionsFromCsv, 
     allSubmissions, 
+    allQuizResults, 
     currentTimeFormatted 
   } = useQuiz();
+
+  const [resultsTab, setResultsTab] = useState('active'); // 'active' | 'all'
 
   // Time Form State (IST local format)
   const [startTimeLocal, setStartTimeLocal] = useState('');
@@ -130,7 +136,7 @@ export function AdminDashboard() {
     if (res.success) {
       setSyncLog({
         type: 'success',
-        message: `Successfully loaded ${res.count} questions from public/quizQuestion.csv into Firestore /questions!`,
+        message: `Deleted ${res.deletedCount} old question(s). Successfully loaded ${res.count} new questions from public/quizQuestion.csv into Firestore!`,
         timestamp: formatIST(getNowIST())
       });
     } else {
@@ -158,7 +164,7 @@ export function AdminDashboard() {
         if (res.success) {
           setSyncLog({
             type: 'success',
-            message: `Successfully loaded ${res.count} questions from uploaded file "${file.name}"!`,
+            message: `Deleted ${res.deletedCount} old question(s). Successfully loaded ${res.count} new questions from "${file.name}"!`,
             timestamp: formatIST(getNowIST())
           });
         } else {
@@ -411,7 +417,7 @@ export function AdminDashboard() {
 
         </div>
 
-        {/* Right Column: Live Admin Leaderboard (5 cols) */}
+        {/* Right Column: Live Admin Leaderboard & Results (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
@@ -420,16 +426,28 @@ export function AdminDashboard() {
                   <Trophy className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white">Live Submissions</h2>
-                  <p className="text-xs text-slate-400">{allSubmissions.length} participant attempts</p>
+                  <h2 className="text-base font-bold text-white">
+                    {resultsTab === 'active' ? 'Live Standings' : 'Quiz Results Collection'}
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    {resultsTab === 'active' 
+                      ? `${allSubmissions.length} active participants` 
+                      : `${allQuizResults.length} records in /quiz_results`}
+                  </p>
                 </div>
               </div>
 
               {/* Export Button */}
               <button
                 type="button"
-                disabled={allSubmissions.length === 0}
-                onClick={() => exportLeaderboardToCsv(allSubmissions, `quiz_leaderboard_${Date.now()}.csv`)}
+                disabled={resultsTab === 'active' ? allSubmissions.length === 0 : allQuizResults.length === 0}
+                onClick={() => {
+                  if (resultsTab === 'active') {
+                    exportLeaderboardToCsv(allSubmissions, `quiz_leaderboard_${Date.now()}.csv`);
+                  } else {
+                    exportQuizResultsToCsv(allQuizResults, `quiz_results_collection_${Date.now()}.csv`);
+                  }
+                }}
                 className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -437,54 +455,135 @@ export function AdminDashboard() {
               </button>
             </div>
 
-            {/* Submissions Table */}
-            {allSubmissions.length === 0 ? (
-              <div className="py-12 text-center text-slate-500 text-xs">
-                No submissions recorded yet. Once participants submit, live scores will appear here in real time.
-              </div>
-            ) : (
-              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-semibold">
-                      <th className="py-2.5 px-3">#</th>
-                      <th className="py-2.5 px-3">Participant</th>
-                      <th className="py-2.5 px-3 text-center">Score</th>
-                      <th className="py-2.5 px-3 text-right">Time (IST)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-medium">
-                    {allSubmissions.map((sub, idx) => (
-                      <tr key={sub.id || sub.userId} className="hover:bg-slate-800/40 text-slate-300">
-                        <td className="py-2 px-3 font-bold text-slate-400">
-                          {idx + 1}
-                        </td>
-                        <td className="py-2 px-3">
-                          <div className="font-semibold text-slate-100 truncate max-w-[140px]">
-                            {sub.displayName || sub.userEmail?.split('@')[0]}
-                          </div>
-                          <div className="text-[10px] text-slate-500 truncate max-w-[140px] flex items-center gap-1.5">
-                            <span>{sub.userEmail}</span>
-                            {sub.attemptNumber > 1 && (
-                              <span className="text-[9px] px-1 rounded bg-amber-500/15 text-amber-300 font-mono">
-                                #{sub.attemptNumber}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-mono font-bold">
-                            {sub.totalScore ?? 0}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-[10px] text-slate-400">
-                          {sub.submittedAt ? sub.submittedAt.split(',')[1] || sub.submittedAt : '—'}
-                        </td>
+            {/* Toggle Tabs */}
+            <div className="flex rounded-xl bg-slate-950 p-1 border border-slate-800 mb-4 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setResultsTab('active')}
+                className={`flex-1 py-1.5 rounded-lg transition-colors ${
+                  resultsTab === 'active' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Current Standings ({allSubmissions.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setResultsTab('all')}
+                className={`flex-1 py-1.5 rounded-lg transition-colors ${
+                  resultsTab === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Results by Quiz Title ({allQuizResults.length})
+              </button>
+            </div>
+
+            {/* Results Display */}
+            {resultsTab === 'active' ? (
+              allSubmissions.length === 0 ? (
+                <div className="py-12 text-center text-slate-500 text-xs">
+                  No submissions recorded yet. Once participants submit, live scores will appear here in real time.
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-semibold">
+                        <th className="py-2.5 px-3">#</th>
+                        <th className="py-2.5 px-3">Participant</th>
+                        <th className="py-2.5 px-3 text-center">Score</th>
+                        <th className="py-2.5 px-3 text-right">Time (IST)</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 font-medium">
+                      {allSubmissions.map((sub, idx) => (
+                        <tr key={sub.id || sub.userId} className="hover:bg-slate-800/40 text-slate-300">
+                          <td className="py-2 px-3 font-bold text-slate-400">
+                            {idx + 1}
+                          </td>
+                          <td className="py-2 px-3">
+                            <div className="font-semibold text-slate-100 truncate max-w-[140px]">
+                              {sub.displayName || sub.userEmail?.split('@')[0]}
+                            </div>
+                            <div className="text-[10px] text-slate-500 truncate max-w-[140px] flex items-center gap-1.5">
+                              <span>{sub.userEmail}</span>
+                              {sub.attemptNumber > 1 && (
+                                <span className="text-[9px] px-1 rounded bg-amber-500/15 text-amber-300 font-mono">
+                                  #{sub.attemptNumber}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-mono font-bold">
+                              {sub.totalScore ?? 0}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-[10px] text-slate-400">
+                            {sub.submittedAt ? sub.submittedAt.split(',')[1] || sub.submittedAt : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            ) : (
+              allQuizResults.length === 0 ? (
+                <div className="py-12 text-center text-slate-500 text-xs">
+                  No records found in Firestore collection <code className="text-blue-400">/quiz_results</code> yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-semibold">
+                        <th className="py-2.5 px-3">#</th>
+                        <th className="py-2.5 px-3">Quiz & Participant</th>
+                        <th className="py-2.5 px-3 text-center">Score</th>
+                        <th className="py-2.5 px-3 text-right">Time (IST)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 font-medium">
+                      {allQuizResults.map((res, idx) => (
+                        <tr key={res.resultId || res.id || idx} className="hover:bg-slate-800/40 text-slate-300">
+                          <td className="py-2 px-3 font-bold text-slate-400">
+                            {idx + 1}
+                          </td>
+                          <td className="py-2 px-3">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="px-1.5 py-0.2 rounded bg-purple-500/15 text-purple-300 text-[10px] font-bold border border-purple-500/20 truncate max-w-[130px]">
+                                {res.quizTitle || 'RLC JE 2026'}
+                              </span>
+                              {res.attemptNumber > 1 && (
+                                <span className="text-[9px] px-1 rounded bg-amber-500/15 text-amber-300 font-mono">
+                                  Att #{res.attemptNumber}
+                                </span>
+                              )}
+                            </div>
+                            <div className="font-semibold text-slate-100 truncate max-w-[140px]">
+                              {res.displayName || res.userEmail?.split('@')[0]}
+                            </div>
+                            <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                              {res.userEmail}
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono font-bold">
+                              {res.totalScore ?? 0}
+                            </span>
+                            <span className="block text-[9px] text-slate-500 font-mono">
+                              {res.percentage ?? 0}%
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-[10px] text-slate-400">
+                            {res.submittedAt ? res.submittedAt.split(',')[1] || res.submittedAt : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
             )}
           </div>
         </div>

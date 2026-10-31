@@ -3,6 +3,7 @@ import {
   db, 
   doc, 
   getDoc, 
+  getDocs,
   setDoc, 
   collection, 
   onSnapshot, 
@@ -10,7 +11,8 @@ import {
   writeBatch,
   CONFIG_DOC,
   QUESTIONS_COLLECTION,
-  SUBMISSIONS_COLLECTION 
+  SUBMISSIONS_COLLECTION,
+  RESULTS_COLLECTION 
 } from '../firebase';
 import { useAuth } from './AuthContext';
 import { 
@@ -41,10 +43,11 @@ export function QuizProvider({ children }) {
   const [questions, setQuestions] = useState([]);
   const [questionsLoading, setQuestionsLoading] = useState(true);
 
-  // Submissions
+  // Submissions & Results
   const [userSubmission, setUserSubmission] = useState(null);
   const [userSubmissionLoading, setUserSubmissionLoading] = useState(true);
   const [allSubmissions, setAllSubmissions] = useState([]);
+  const [allQuizResults, setAllQuizResults] = useState([]);
 
   // Active Quiz State & Navigation
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -233,6 +236,34 @@ export function QuizProvider({ children }) {
     return () => unsub();
   }, [isAdmin, quizStatus]);
 
+  // 7. Results Listener for new /quiz_results collection (stores quiz results with quiz title)
+  useEffect(() => {
+    if (!isAdmin && quizStatus !== 'post-quiz') {
+      setAllQuizResults([]);
+      return;
+    }
+
+    const unsub = onSnapshot(collection(db, RESULTS_COLLECTION), (snap) => {
+      const results = [];
+      snap.forEach((doc) => {
+        results.push({ id: doc.id, ...doc.data() });
+      });
+
+      // Sort by submitted timestamp descending
+      results.sort((a, b) => {
+        const timeA = a.submittedAtTimestamp?.toMillis?.() || new Date(a.submittedAt || 0).getTime();
+        const timeB = b.submittedAtTimestamp?.toMillis?.() || new Date(b.submittedAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      setAllQuizResults(results);
+    }, (error) => {
+      console.error('Error fetching quiz_results collection:', error);
+    });
+
+    return () => unsub();
+  }, [isAdmin, quizStatus]);
+
   // 7. Auto-save Answer Handler
   const selectOption = (questionId, optionKey) => {
     setDraftAnswers((prev) => {
@@ -346,8 +377,13 @@ export function QuizProvider({ children }) {
       });
 
       const nextAttemptNumber = (userSubmission?.attemptNumber || 0) + 1;
+      const currentQuizTitle = settings.quizTitle || 'RLC JE 2026';
+      const resultDocId = `${user.uid}_att${nextAttemptNumber}_${Date.now()}`;
 
-      const submissionData = {
+      // Complete quiz result object storing user quiz result with quizTitle
+      const quizResultPayload = {
+        resultId: resultDocId,
+        quizTitle: currentQuizTitle,
         userId: user.uid,
         userEmail: user.email,
         displayName: user.displayName || user.email.split('@')[0],
@@ -355,6 +391,7 @@ export function QuizProvider({ children }) {
         answers: draftAnswers,
         totalScore: score,
         maxScore: maxScore,
+        percentage: maxScore > 0 ? Math.round((score / maxScore) * 100) : 0,
         correctCount: correctCount,
         totalQuestions: questions.length,
         attemptNumber: nextAttemptNumber,
@@ -362,8 +399,12 @@ export function QuizProvider({ children }) {
         submittedAtTimestamp: serverTimestamp()
       };
 
-      await setDoc(doc(db, SUBMISSIONS_COLLECTION, user.uid), submissionData);
-      setUserSubmission(submissionData);
+      // 1. Store in new collection /quiz_results with quiz title
+      await setDoc(doc(db, RESULTS_COLLECTION, resultDocId), quizResultPayload);
+
+      // 2. Update /submissions/{userId} for active user state & live leaderboard
+      await setDoc(doc(db, SUBMISSIONS_COLLECTION, user.uid), quizResultPayload);
+      setUserSubmission(quizResultPayload);
       setIsReattempting(false);
 
       // Update draft in localStorage
@@ -458,34 +499,47 @@ export function QuizProvider({ children }) {
         throw new Error('No valid questions found in CSV file.');
       }
 
-      // Batch write to Firestore collection /questions
-      const batch = writeBatch(db);
+      const CHUNK_SIZE = 499; // Firestore batch max = 500 ops
 
-      // Clean or overwrite existing questions
-      parsedQuestions.forEach((q) => {
-        const docRef = doc(db, QUESTIONS_COLLECTION, String(q.questionId));
-        batch.set(docRef, {
-          questionId: q.questionId,
-          order: q.order,
-          questionText: q.questionText,
-          options: q.options,
-          correctOption: q.correctOption,
-          marks: q.marks
+      // STEP 1: Fetch and DELETE all existing questions
+      const existingSnap = await getDocs(collection(db, QUESTIONS_COLLECTION));
+      const existingDocs = existingSnap.docs;
+
+      for (let i = 0; i < existingDocs.length; i += CHUNK_SIZE) {
+        const deleteBatch = writeBatch(db);
+        existingDocs.slice(i, i + CHUNK_SIZE).forEach((d) => {
+          deleteBatch.delete(d.ref);
         });
-      });
+        await deleteBatch.commit();
+      }
 
-      // Update lastSyncedAt in quiz_settings
-      const settingsRef = doc(db, 'config', CONFIG_DOC);
-      batch.set(settingsRef, {
+      // STEP 2: Write new questions in chunks
+      for (let i = 0; i < parsedQuestions.length; i += CHUNK_SIZE) {
+        const uploadBatch = writeBatch(db);
+        parsedQuestions.slice(i, i + CHUNK_SIZE).forEach((q) => {
+          const docRef = doc(db, QUESTIONS_COLLECTION, String(q.questionId));
+          uploadBatch.set(docRef, {
+            questionId: q.questionId,
+            order: q.order,
+            questionText: q.questionText,
+            options: q.options,
+            correctOption: q.correctOption,
+            marks: q.marks
+          });
+        });
+        await uploadBatch.commit();
+      }
+
+      // STEP 3: Update lastSyncedAt in quiz_settings
+      await setDoc(doc(db, 'config', CONFIG_DOC), {
         lastSyncedAt: formatIST(getNowIST()),
         totalQuestionsCount: parsedQuestions.length
       }, { merge: true });
 
-      await batch.commit();
-
       return {
         success: true,
         count: parsedQuestions.length,
+        deletedCount: existingDocs.length,
         questions: parsedQuestions
       };
     } catch (err) {
@@ -512,6 +566,7 @@ export function QuizProvider({ children }) {
         startReattempt,
         cancelReattempt,
         allSubmissions,
+        allQuizResults,
         currentQuestionIndex,
         setCurrentQuestionIndex,
         draftAnswers,
